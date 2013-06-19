@@ -1,0 +1,281 @@
+myView {
+	Component tabView = TabBarView {
+		String TabBarView width = "100%";
+		String TabBarView height = "100%";
+		String TabBarView selectedTab = settingsTab;
+		
+		String iconFolder = "/VAADIN/themes/vornitologist/linegraphics/";
+
+		Component birdsTab = NavigationView {
+			String NavigationView caption = "Birds";
+			String NavigationView icon = iconFolder + "bird.png";
+			String NavigationView width = "100%";
+			String NavigationView height = "100%";
+			Component NavigationView content = CssLayout {
+				Component info = VerticalComponentGroup {
+					String VerticalComponentGroup caption = "Not implemented";
+				};
+			};
+		};
+		
+		Component observationsTab = NavigationView {
+			String NavigationView caption = "Observations";
+			String NavigationView icon = iconFolder + "binocular.png";
+			String NavigationView width = "100%";
+			String NavigationView height = "100%";
+			
+			Function addObservation = () {
+				Component newObservation = Popover {
+					String Popover height = "100%";
+					String Popover width = "100%";
+					Function Popover close = (){};
+					Function Popover showRelativeTo  = (){};
+					
+					Component popoverContents = NavigationView {
+						String NavigationView caption = "New observation";
+						
+						Component NavigationView leftComponent = Button {
+							String Button caption = "Cancel";
+							Function onClick = () {
+								close();
+							} listens to click;
+						};
+						Component NavigationView rightComponent = Button {
+							String Button caption = "Save";
+							Function onClick = () {
+								if (content.details.species.isValid()) {
+									java("Notification.show(\"Saved\");");
+									observationsTab.content.observationsTable.addItem([popoverContents.content.details.time.value, popoverContents.content.details.species.value, popoverContents.content.location.name.value, popoverContents.content.details.count.value]);
+									close();
+								}
+								else {
+									java("Notification.show(\"You must specifiy the species!\");");
+								}
+							} listens to click;
+						};
+						
+						Component NavigationView content = CssLayout {
+							String CssLayout width = "100%";
+							String CssLayout height = "100%";
+							
+							Component details = VerticalComponentGroup {
+								String VerticalComponentGroup caption = "Settings";
+								Component species = TextField {
+									String TextField width = "100%";
+									String TextField caption = "species";
+									String TextField value = "Whooper Swan";
+									Bool TextField required = true; 
+									Function TextField isValid = (){};
+								};
+								Component time = DateField {
+									String DateField width = "200px";
+									String DateField caption = "time";
+									String DateField value = java("new Date()");
+									String DateField resolution = java("DateField.RESOLUTION_MIN");
+								};
+								Component count = NumberField {
+									String NumberField width = "100%";
+									String NumberField caption = "count";
+									String NumberField value = "1"; 
+								};
+								Component observer = TextField {
+									String TextField width = "100%";
+									String TextField caption = "observer";
+									String TextField value = settingsTab.content.settings.userName.value; 
+								};
+							};
+							Component location = VerticalComponentGroup {
+								Component name = TextField {
+									String TextField width = "100%";
+									String TextField caption = "Name";
+									String TextField value = "Rovaniemi"; 
+								};
+								Component lonlat = CssLayout {
+									String CssLayout caption = "lon/lat";
+									Component longitude = NumberField {
+										String NumberField width = "50%";
+										String NumberField value = "20.0023"; 
+										String NumberField description = "Lon (eg. 20.0023)";
+									};
+									Component latitude = NumberField {
+										String NumberField width = "50%";
+										String NumberField value = "60.0023";
+										String NumberField description = "Lat (eg. 60.0023)"; 
+									};
+								};
+								Component fromMapButton = Button {
+									String Button caption = "Choose from map";
+								};
+							};
+						};
+					};
+				};
+				newObservation.showRelativeTo(observationsTab);
+			};
+			
+			Function showDetails = () {
+				Component newObservation = Popover{
+					String Popover width = "450px";
+					String Popover height = "65%";
+					Function Popover close = (){};
+					Function Popover showRelativeTo  = (){};
+					
+					Component popoverContents = NavigationView {
+						Component NavigationView rightComponent = Button{
+							String Button caption = "X";
+							Function onClick = () {
+								close();
+							} listens to click;
+						};
+						Component NavigationView Content = CssLayout{
+							Component information = VerticalComponentGroup {
+								Component species = Label {
+									String Label caption = "Species: " +  observationsTab.content.observationsTable.getSelected("Species");
+								};
+								Component location = Label {
+									String Label caption = "Location: " +  observationsTab.content.observationsTable.getSelected("Location");
+								};
+								Component time = Label {
+									String Label caption = "Time: " + observationsTab.content.observationsTable.getSelected("Time");
+								};
+								Component count = Label {
+									String Label caption = "Count: " + observationsTab.content.observationsTable.getSelected("Count");
+								};
+								
+							};
+						};
+					
+					};
+				};
+				newObservation.showRelativeTo(observationsTab);
+			};
+			
+			Component NavigationView content = VerticalLayout {
+				String Table width = "100%";
+				String Table height = "100%";
+				
+				Component observationsTable = Table("Time", "Species", "Location", "Count") {
+					String Table width = "100%";
+					String Table height = "100%";
+					Bool Table selectable = true;
+					String Table value;
+					Function Table addItem = (){};
+					Function Table getSelected = (){};
+					
+					Function onClick = () {
+						showDetails();
+					} listens to itemClick;
+					
+					Function add5Birds = () {
+						addItem([java("new Date()"), "Lesser Kestrel", "Turku", "8"]);
+						addItem([java("new Date()"), "Red-footed Falcon", "Tampere", "1"]);
+						addItem([java("new Date()"), "Western Capercaillie", "Salo", "3"]);
+						addItem([java("new Date()"), "Black Grouse", "Helsinki", "22"]);
+						addItem([java("new Date()"), "Barn Swallow", "Turku", "15"]);
+					} listens to init;
+				};
+			};
+			
+			Component NavigationView rightComponent = Button {
+				String Button icon = iconFolder + "plus.png";
+				Function onClick = (){
+					addObservation();
+				} listens to click;
+			};
+		};
+		
+		Component mapTab = NavigationView {
+			String NavigationView caption = "Map";
+			String NavigationView icon = iconFolder + "world.png";
+			String NavigationView width = "100%";
+			String NavigationView height = "100%";
+			Component NavigationView content = CssLayout {
+				Component info = VerticalComponentGroup {
+					String VerticalComponentGroup caption = "Not yet supported in Vaadin 7";
+				};
+			};
+		};
+		
+		Component settingsTab = NavigationView {
+			String NavigationView icon = iconFolder + "tools.png";
+			String NavigationView width = "100%";
+			String NavigationView height = "100%";
+			String NavigationView caption = "Settings";
+			
+			Component NavigationView content = CssLayout {
+				String CssLayout width = "100%";
+				
+				Component about = VerticalComponentGroup {
+					String VerticalComponentGroup caption = "About Vornitologist";
+					Component infoBox = Label {
+						String Label caption = 
+							"<div style='color:#333; width: \"100%\"'><p>This is a demo application that mimics the original "
+							+ "Vornitologist that can be found <a href=\"http://demo.vaadin.com/vornitologist\"> here</a></p>"
+							+ "<p> The purpose of this demo is to show what can be done with touchScript.<br>"
+							+ " Features like the database and session-management have been left out"
+							+ "  as <br>they are not supported by the language.<br>The UI and logic that is present however is all written in touchScript."
+							+ " The source can be found <a href=\"https://dl.dropboxusercontent.com/u/3409641/random/myView.htm\"> here</a></p>" + "</div>";
+					};
+				};
+				
+				Component settings = VerticalComponentGroup {
+					String VerticalComponentGroup caption = "Settings";
+					
+					Component info = Label {
+						String Label caption = "Others but language setting here is just to demonstrate widgets.";
+					};
+					Component userName = TextField {
+						String TextField width = "100%";
+						String TextField caption = "UserName";
+						String TextField value = "Skogsborje"; 
+					};
+					Component eMail = EmailField {
+						String EmailField width = "100%";
+						String EmailField caption = "Email";
+						String EmailField value = "ornithologist@example.com"; 
+					};
+					Component age = NumberField {
+						String NumberField width = "100%";
+						String NumberField caption = "Age";
+						String NumberField value = "ornithologist@example.com"; 
+					};
+					Component useLocation = Switch {
+						String Switch width = "100%";
+						String Switch caption = "Use my location";
+						Bool Switch value = true; 
+					};
+					Component alerts = Switch {
+						String Switch width = "100%";
+						String Switch caption = "Alerts";
+						Bool Switch value = false; 
+					};
+					Component goOffline = Button {
+						String Button width = "100%";
+						String Button caption = "Go offline";
+					};
+				};
+				Component language = VerticalComponentGroup {
+					String VerticalComponentGroup caption = "Language";
+					
+					Component radioButtons = OptionGroup("English", "suomi", "svenska") {
+						String OptionGroup value = "English";
+						Function changeLanguage = () {
+							if (value == "English") {
+								settingsTab.caption = "Settings";
+								observationsTab.caption = "Observations";
+							}
+							if (value == "suomi") {
+								settingsTab.caption = "Asetukset";
+								observationsTab.caption = "Havainnot";
+							}
+							if (value == "svenska") {
+								settingsTab.caption = "Installningar";
+								observationsTab.caption = "Observationer";
+							}
+						} listens to valueChange;
+					};
+				};
+			};
+		};
+	};
+}

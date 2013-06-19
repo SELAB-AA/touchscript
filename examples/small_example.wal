@@ -1,0 +1,34 @@
+small_example {
+	Component content = HorizontalLayout {
+		
+		Component counterButton = Button {
+			String Button caption = "The button";
+			Int clickCounter = 0;
+			Function clickListener = () {
+				clickCounter = clickCounter+1;
+				String text =
+					"The button was clicked "+clickCounter+" times.";
+				textContainer.addText(text);
+			} listens to click;
+		};
+		
+		Component resetButton = Button {
+			String Button caption = "Reset";
+			Function reset = () {
+				textContainer.removeAllComponents();
+				counterButton.clickCounter = 0;
+			} listens to click;
+		};
+		
+		Component textContainer = VerticalLayout {
+			Function VerticalLayout addComponent = (){};
+			Function VerticalLayout removeAllComponents = (){};
+			Function addText = (String text) {
+				Component textLabel = Label {
+					String Label caption = text;
+				};
+				addComponent(textLabel);
+			};
+		};
+	};
+}

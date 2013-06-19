@@ -1,0 +1,207 @@
+grammar org.xtext.example.mydsl.WebAppDSL with org.eclipse.xtext.common.Terminals
+
+generate webAppDSL "http://www.xtext.org/example/mydsl/WebAppDSL"
+
+View: 
+	name = ID "{"
+		viewBlock = Block
+	"}"
+;
+
+Block:
+	(statements += Statement)*
+;
+
+Statement:
+	 VariableDeclaration ";"
+	| AssignmentExpression ";"
+	| IfStatement
+	| ForLoopStatement
+//	| AddComponentStatement
+;
+
+//AddComponentStatement:
+//	"add "newComponent = ComponentValue" to" parent = VariableUse ";"
+//;
+
+ForLoopStatement:
+	"for" "("
+		initialization = (VariableDeclaration | AssignmentExpression) ";"
+		condition = Expression ";"
+		afterthought = AssignmentExpression
+	")" "{"
+		loopBlock = Block
+	"}"
+	
+;
+
+IfStatement:
+	"if" "(" condition = Expression ")" "{" consequent = Block "}" ("else" "{" alternative = Block "}")?
+;
+
+VariableDeclaration:
+	variableType = VariableType
+	(component = VaadinComponents)?
+	//("with" ref = VariableUse)?
+	name = ID
+	("=" value = Expression)? //Setting initial value is optional
+;
+
+VariableType:
+  ComponentType | IntType | BoolType | FloatType | StringType | FunctionType | ArrayType;
+
+ComponentType:
+  {ComponentType} "Component";
+  
+IntType:
+  {IntType} "Int";
+
+BoolType:
+  {BoolType} "Bool";
+
+FloatType:
+  {FloatType} "Float";
+  
+ StringType:
+  {StringType} "String";
+  
+ FunctionType:
+  {FunctionType} "Function";  
+  
+ArrayType:
+  {ArrayType} "Array";
+
+AssignmentExpression returns Expression:
+	Expression ({AssignmentOperation.owner=current} op='=' right=AssignmentExpression)?;
+
+Expression returns Expression:
+	AdditiveExpression;	
+
+AdditiveExpression returns Expression:
+	MultiplicativeExpression ({OperationCall.owner=current} op=('+' | '-') right=MultiplicativeExpression)*;
+
+MultiplicativeExpression returns Expression:
+	BooleanExpression ({OperationCall.owner=current} op=('*' | '/') right = BooleanExpression)*;
+
+BooleanExpression returns Expression:
+	PrimaryExpression ({OperationCall.owner=current} op=('&&' | '||' | '>' | '<' | '>=' | '<=' | '==' | '!=') right = PrimaryExpression)*;
+
+
+PrimaryExpression returns Expression:
+	 Value
+	| VariableUse
+	| '(' Expression ')'
+	| ParentReference
+	| JavaExpression
+;
+
+JavaExpression:
+	"java("
+		eval = TextValue
+	")"
+;
+
+ParentReference:
+	"parent."("parent.")*
+	VariableUse
+;
+
+VariableUse:
+	ref = [VariableDeclaration]
+	(("(" functionCall = Parameters? ")") | (rgt = Member))?
+;
+
+Parameters:
+	parameters += Expression
+	("," parameters += Expression)*
+;
+
+
+
+Member:
+	"." member = VariableUse
+;
+
+Value:
+	BooleanValue
+	|NumberValue
+	| TextValue
+	| ArrayValue
+	| ComponentValue
+	| FunctionValue;
+
+NullValue:
+	{NullValue}
+	"null"
+;
+
+BooleanValue:
+	{BooleanValue}
+	value = (
+		"true"
+		| "false"
+	)
+;
+
+NumberValue:
+	number = INT
+;
+
+TextValue:
+	text = STRING
+;
+
+ArrayValue:
+	"["
+		values += Expression
+		("," values += Expression)*
+	"]"
+;
+
+VaadinComponents:
+	(
+		"Button"
+		| "Label"
+		| "AbsoluteLayout"
+		| "VerticalLayout"
+		| "HorizontalLayout"
+		| "TabBarView"
+		| "Table"
+		| "Switch"
+		| "TextField"
+		| "NumberField"
+		| "EmailField"
+		| "DateField"
+		| "OptionGroup"
+		| "NavigationView"
+		| "NavigationManager"
+		| "Popover"
+		| "VerticalComponentGroup"
+		| "CssLayout"
+	)
+;
+
+ComponentValue:
+	type = VaadinComponents
+	(
+		"("
+			properties += TextValue
+			(","properties += TextValue)*
+		")"
+	)?
+	"{"
+		(declarations += VariableDeclaration ";")*
+	"}"
+	
+;
+
+
+FunctionValue:
+	'('
+		(arguments += VariableDeclaration ("," arguments += VariableDeclaration)*)?
+	')'
+	"{"
+		functionBlock = Block
+	'}'
+	("listens to" (events += ID | ("[" events += ID ("," events += ID)* "]")))?
+;
